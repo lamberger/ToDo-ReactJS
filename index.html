@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>ToDo-ReactJS</title>
+  <meta charset="utf-8">
+  <meta name="author" content="Patrik Lamberger">
+  <script src="js/react.min.js"></script>
+  <script src="js/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  <!-- Bootstrap -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div id="root"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/babel">
+        "use strict";
+
+//======================================= NoteApp ===========================================================
+
+          var NoteApp = React.createClass({
+            getInitialState: function() {
+              return { title: '', inEditMode: null, notes: [], btnTitle: 'Save note', btnColorClass: 'btn btn-info', numberOfNotes: 0 };
+            },
+            addNote: function(title){
+              var newNote = { id: Date.now(), title: title }
+              this.setState({ notes: this.state.notes.concat(newNote), title: this.refs.text = '', numberOfNotes:this.state.notes.length + 1 });
+            },
+            handleDelete:function(note){
+              if(confirm("Are you sure you want to delete " + note.title)){
+                var tempNotes = this.state.notes;
+                for(var n = 0; n < tempNotes.length; n++) {
+                  if(tempNotes[n].id == note.id){
+                    tempNotes.splice(n, 1);
+                  }
+                }
+                this.setState({ notes:tempNotes, numberOfNotes:this.state.notes.length });
+              }
+              else {
+                return
+              }
+            },
+            handleEdit: function(note){
+              this.setState({ title: note.title, inEditMode: note.id, btnTitle: 'Save changes', btnColorClass: 'btn btn-success'});
+            },
+            handelonChangeTitle: function(title){
+              this.setState({ title:title });
+            },
+            handleNoteUpdate: function(note){
+              var tempNotes = this.state.notes;
+              for(var n = 0; n < tempNotes.length; n++) {
+                if(tempNotes[n].id == note.id){
+                  tempNotes.splice(n, 1);
+                }
+              }
+            tempNotes.push(note);
+              this.setState({
+                notes:tempNotes, title: this.refs.text = '', inEditMode: null, btnTitle: 'Save note', btnColorClass: 'btn btn-info'
+              });
+            },
+            render: function(){
+              return (
+                <div>
+                  <NoteForm
+                    {...this.state}
+                    handleNewNote={this.addNote}
+                    onChangeTitle={this.handelonChangeTitle}
+                    onNoteUpdate={this.handleNoteUpdate}
+                  />
+
+                  <NoteCollection
+                    {...this.state}
+                    noteToDelete={this.handleDelete}
+                    notToEdit={this.handleEdit}
+                  />
+                </div>
+              )
+            }
+          });
+
+//======================================= NoteForm ===========================================================
+
+          var NoteForm = React.createClass({
+
+            onTitleChange: function(e){
+              this.props.onChangeTitle(e.target.value);
+            },
+            handleSubmit: function(e){
+              e.preventDefault();
+              var title = this.refs.title.value;
+              if(!title){
+                alert('Enter a note');
+                return;
+              }
+              if(this.props.inEditMode){
+                var noteToUpdate = {
+                  id:this.props.inEditMode,
+                  title: title
+                }
+                this.props.onNoteUpdate(noteToUpdate);
+              } else {
+                this.props.handleNewNote(title);
+              }
+            },
+            render: function(){
+              return (
+                <div>
+                  <h1>ToDo-ReactJS <span className="badge"> {this.props.numberOfNotes} </span></h1>
+                  <form ref="form" onSubmit={this.handleSubmit}>
+                    <div className="form-group">
+                      <input className="form-control" type="text" ref="title" onChange={this.onTitleChange} value={this.props.title} placeholder="Enter a note..."/>
+                      <br />
+                      <button className={this.props.btnColorClass}>{this.props.btnTitle}</button>
+                    </div>
+                  </form>
+                  <hr />
+                </div>
+              )
+            }
+          });
+
+//======================================= NoteCollection ===========================================================
+
+          var NoteCollection = React.createClass({
+            onNoteDelete: function(note){
+              this.props.noteToDelete(note);
+            },
+            onEditNote: function(note){
+              this.props.notToEdit(note);
+            },
+            render: function(){
+              return (
+                <div>
+                  {this.props.notes.map(note => {
+                    return (
+                      <div>
+                        <h3 note={note} key={note.id}>{note.title}</h3>
+                        <button
+                          className="btn btn-danger btn-xs"
+                          onClick={this.onNoteDelete.bind(this, note)}>
+                          Delete
+                        </button>
+                        &nbsp;
+                        <button
+                          className="btn btn-warning btn-xs"
+                          onClick={this.onEditNote.bind(this, note)}>
+                          Edit note
+                        </button>
+                        <hr />
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            }
+          });
+          ReactDOM.render(<NoteApp />, document.getElementById('root'));
+
+        </script>
+</body>
+
+</html>
